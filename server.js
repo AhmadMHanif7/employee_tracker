@@ -1,4 +1,5 @@
 const express = require('express');
+const inquirer = require('inquirer');
 const db = require('./db/connection');
 const routes = require('./routes');
 
