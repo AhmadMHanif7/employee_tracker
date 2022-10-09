@@ -1,7 +1,6 @@
 const express = require('express');
 const inquirer = require('inquirer');
 const db = require('./db/connection');
-const routes = require('./routes')
 
 function confirmContinue() {
     inquirer.prompt(
@@ -81,7 +80,7 @@ function addDepartments(name) {
 function addRole(title, salary, department_id) {
     const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
 
-    db.query(sql, title, salary, department_id, (err, rows) => {
+    db.query(sql, [title, salary, department_id], (err, rows) => {
         if (err) {
             console.error(err)
             return;
@@ -92,31 +91,32 @@ function addRole(title, salary, department_id) {
     })
 }
 
-function addEmployee () {
-    const sql = `SELECT * FROM role`;
+function addEmployee (first_name, last_name, role_id, manager_id) {
+    const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
 
-    db.query(sql, (err,rows) => {
+    db.query(sql, [first_name, last_name, role_id, manager_id], (err, result) => {
         if (err) {
-            res.status(500).json({error: err.message});
+            console.error(err)
             return;
         }
-        console.table(rows)
+        console.log('Employee added successfully')
+        viewEmployees()
         confirmContinue();
-    })
+    });
+}
 
-};
-
-function updateEmployee () {
-    const sql = `SELECT * FROM role`;
-
-    db.query(sql, (err,rows) => {
+function updateEmployee (role_id, id) {
+    const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+   
+    db.query(sql, [role_id, id], (err, result) => {
         if (err) {
-            res.status(500).json({error: err.message});
+            console.error(err)
             return;
         }
-        console.table(rows)
+        console.log('Employee updated successfully')
+        viewEmployees()
         confirmContinue();
-    })
+    });
 
 };
 
@@ -174,10 +174,46 @@ function mainMenu() {
                 });
                 break;
             case 'add an employee':
-                addEmployee()
+                inquirer.prompt([
+                    {
+                        name: 'first_name',
+                        type: 'input',
+                        message: 'What is the first name?',
+                    },
+                    {
+                        name: 'last_name',
+                        type: 'input',
+                        message: 'What is the last name?',
+                    },
+                    {
+                        name: 'role_id',
+                        type: 'input',
+                        message: 'Role Id?',
+                    },
+                    {
+                        name: 'manager_id',
+                        type: 'input',
+                        message: 'Manager Id?',
+                    }
+                ]).then(answers => {
+                    addEmployee(answers.first_name, answers.last_name, answers.role_id, answers.manager_id)
+                })
                 break;
             case 'update employee role':
-                updateEmployee()
+                inquirer.prompt([
+                    {
+                        name: 'role_id',
+                        type: 'input',
+                        message: 'Role Id?',
+                    },
+                    {
+                        name: 'id',
+                        type: 'input',
+                        message: 'Employee Id?',
+                    }
+                ]).then(answers => {
+                    updateEmployee(answers.role_id, answers.id, )
+                })
                 break;
         }
     });
